@@ -5,6 +5,7 @@
 #include <QString>
 #include <QChar>
 #include "math.h"
+#include <QColor>
 
 const double pi = 3.1415926535;
 
@@ -115,6 +116,7 @@ Widget::Widget(QWidget *parent) :
     ui->lineEdit->setText("0.005");
     QString s = QChar(948);
     ui->label_7->setText(s+"t");
+    ui->checkBox->setText("Derivative-dependent\n"+s+"t");
 }
 
 
@@ -202,13 +204,27 @@ void vecSum (my_vector4 &x, my_vector4 y){
     x.setElem(2, res[2]);
 }
 
+void getShadowXY(my_vector4 lightPoint, my_vector4 curvePoint, my_vector4 &shadowPoint){
+    double x, y, z;
+
+    x = lightPoint.getElem(0) + ( lightPoint.getElem(0) - curvePoint.getElem(0) ) * ( lightPoint.getElem(2) / ( curvePoint.getElem(2) - lightPoint.getElem(2) ));
+    y = lightPoint.getElem(1) + ( lightPoint.getElem(1) - curvePoint.getElem(1) ) * ( lightPoint.getElem(2) / ( curvePoint.getElem(2) - lightPoint.getElem(2) ));
+    z = 0.0;
+
+    shadowPoint.setElem(0, x);
+    shadowPoint.setElem(1, y);
+    shadowPoint.setElem(2, z);
+
+}
+
 void Widget::paintEvent(QPaintEvent *)
 {
     int i, nSteps, count;
     double t, tt, scale = ( width()/4 + height()/4 )/6, sum, k;
     double x, y, z, delta = 0.005, dxdt = 1, dydt = 1, tempDelta;
 
-    my_vector4 xyz(0.0, 0.0, 0.0), xyz0(width()/2, height()/2, 0.0), xxyyzz(0.0, 0.0, 0.0);
+    my_vector4 xyz(0.0, 0.0, 0.0), xyz0(width()/2, height()/2, scale*5.0), xxyyzz(0.0, 0.0, 0.0),
+            light_point(0.0, 0.0, scale*13.0), xyz_s(0.0,0.0,0.0), xxyyzz_s(0.0, 0.0, 0.0);
 
     QPainter p(this);
 
@@ -291,7 +307,15 @@ void Widget::paintEvent(QPaintEvent *)
         vecSum(xyz, xyz0);
         vecSum(xxyyzz, xyz0);
 
+        getShadowXY(light_point, xyz, xyz_s);
+        getShadowXY(light_point, xxyyzz, xxyyzz_s);
+
+        p.setPen(Qt::darkMagenta);
         p.drawLine( xyz.getElem(0), xyz.getElem(1), xxyyzz.getElem(0), xxyyzz.getElem(1) );
+
+        p.setPen(Qt::darkGray);
+        p.drawLine( xyz_s.getElem(0), xyz_s.getElem(1), xxyyzz_s.getElem(0), xxyyzz_s.getElem(1) );
+
     }
 }
 
